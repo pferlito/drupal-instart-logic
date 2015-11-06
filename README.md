@@ -1,4 +1,6 @@
-# Instart Logic
+# Instart Logic Drupal Integration
+
+The Instart Logic module provides integration with the Instart Logic CDN. This enables the purge/invalidation of cached URLs in the Instart Logic Service in response to different site events. It purges not only the internal URL (node/xxx) but also any associated URL aliases. The module integrates with the Cache Expiration module to provide automatic purging.
 
 Project Page:
 http://drupal.org/project/instart_logic
