@@ -1,0 +1,186 @@
+<?php
+
+/**
+ * @file
+ * Instart Logic module.
+ */
+
+/**
+ * Implements hook_permission().
+ *
+ * Return permissions for the Instart Logic module.
+ */
+function instart_logic_permission() {
+  $perms = array(
+    'administer instart logic' => array(
+      'title' => t('Administer Instart Logic'),
+      'description' => t('Allows users to administer Instart Logic.'),
+      'restrict access' => TRUE,
+    ),
+  );
+
+  return $perms;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function instart_logic_menu() {
+  $items = array();
+
+  $items['admin/config/services/instart_logic'] = array(
+    'title' => 'Instart Logic Configuration',
+    'description' => 'Instart Logic Configuration',
+    'page callback' => 'instart_logic_redirect',
+    'page arguments' => array('instart_logic_api_access'),
+    'access arguments' => array('administer instart logic'),
+    'file' => 'instart_logic.admin.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items['admin/config/services/instart_logic/api'] = array(
+    'title' => 'API Access',
+    'description' => 'Instart Logic API Access',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('instart_logic_api_access'),
+    'access arguments' => array('administer instart logic'),
+    'file' => 'instart_logic.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  $items['admin/config/services/instart_logic/purge'] = array(
+    'title' => 'Purge',
+    'description' => 'Purge URLs',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('instart_logic_purge_form'),
+    'access arguments' => array('administer instart logic'),
+    'file' => 'instart_logic.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  return $items;
+}
+
+/**
+ * Utility to get a session. Creates session if needed.
+ *
+ * @param object $api
+ *    API Instance.
+ *
+ * @return bool
+ *    The session id or FALSE.
+ */
+function _instart_get_session($api) {
+  $session_id = variable_get('instart_logic_session_id', '');
+  if (!$session_id || !$api->checkSession($session_id)) {
+    $session_id = _instart_create_session($api);
+  }
+  return $session_id;
+}
+
+/**
+ * Utility to create a new session.
+ *
+ * @param object $api
+ *    API instance.
+ *
+ * @return bool
+ *    The session id or FALSE.
+ */
+function _instart_create_session($api) {
+  $result = $api->createSession();
+  $data = $result->data;
+  $id = json_decode($data)->id;
+  variable_set('instart_logic_session_id', $id);
+  return $id;
+}
+
+/**
+ * Match the form customer name against the account customer name.
+ *
+ * @param string $response
+ *    The json account object returned by the Account Management API.
+ * @param string $customername
+ *    The customer name from the credentials form.
+ *
+ * @return bool
+ *    TRUE if it's a match, FALSE otherwise.
+ */
+function _instart_customername_match($response, $customername) {
+  if ($response && $response->code == '200') {
+    $account = json_decode($response->data);
+    return $account->customer_name == $customername;
+  }
+  return FALSE;
+}
+
+/**
+ * Implements hook_expire_cache().
+ *
+ * Provides integration with the Cache Expiration (expire) module.
+ *
+ * @see expire.api.inc
+ */
+function instart_logic_expire_cache($urls, $wildcards, $object_type, $object) {
+  $username = variable_get('instart_logic_username', '');
+  $password = variable_get('instart_logic_password', '');
+  $customername = variable_get('instart_logic_customername', '');
+  $external_domain = _instart_logic_get_external_domain();
+  $schemes = _instart_logic_get_schemes();
+
+  $api = new Instart($username, $password, $customername);
+  try {
+    $session_id = _instart_get_session($api);
+  }
+  catch (InstartException $e) {
+    drupal_set_message($e->getMessage(), 'error');
+    return;
+  }
+  foreach ($urls as $url) {
+    foreach ($schemes as $scheme) {
+      $path = trim(parse_url($url, PHP_URL_PATH),'/');
+      $full_url = $scheme . '://' . $external_domain . '/' . $path;
+      $purge_urls = array(
+        $full_url => 'EXACT_LITERAL',
+      );
+      drupal_set_message ('purging ' . $full_url);
+      try {
+        $api->purgeUrls($purge_urls, $session_id);
+      } catch (InstartPurgeException $e) {
+        drupal_set_message($e->getMessage(), 'error');
+      }
+    }
+  }
+}
+
+/**
+ * Return the external domain name.
+ *
+ * @return string
+ *    The external domain name.
+ */
+function _instart_logic_get_external_domain() {
+  global $base_root;
+  $domain_name = parse_url($base_root, PHP_URL_HOST);
+  $external_domain_name = variable_get('instart_logic_external_domain_name', $domain_name);
+  return $external_domain_name;
+}
+
+/**
+ * Return the selected schemes to use in purging.
+ *
+ * @return array
+ *    An array of schemes to purge.
+ */
+function _instart_logic_get_schemes() {
+  $schemes = array();
+  $external_base_http = variable_get('instart_logic_external_base_http', 1);
+  $external_base_https = variable_get('instart_logic_external_base_https', '');
+  if ($external_base_http) {
+    $schemes[] = 'http';
+  }
+  if ($external_base_https) {
+    $schemes[] = 'https';
+  }
+  return $schemes;
+}

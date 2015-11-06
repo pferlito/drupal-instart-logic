@@ -1,0 +1,19 @@
+<?php
+
+/**
+ * @file
+ * Instart Logic install.
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function instart_logic_uninstall() {
+  variable_del('instart_logic_username');
+  variable_del('instart_logic_password');
+  variable_del('instart_logic_customername');
+  variable_del('instart_logic_session_id');
+  variable_del('instart_logic_external_domain_name');
+  variable_del('instart_logic_external_base_http');
+  variable_del('instart_logic_external_base_https');
+}

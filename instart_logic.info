@@ -1,0 +1,7 @@
+name = Instart Logic
+description = Integration with the Instart Logic service
+package = Reports
+core = 7.x
+configure = admin/config/services/instart_logic
+files[] = instart_logic.api.inc
+dependencies[] = expire
