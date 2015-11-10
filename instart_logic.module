@@ -70,10 +70,10 @@ function instart_logic_menu() {
  * @return bool
  *    The session id or FALSE.
  */
-function _instart_get_session($api) {
+function _instart_logic_get_session($api) {
   $session_id = variable_get('instart_logic_session_id', '');
   if (!$session_id || !$api->checkSession($session_id)) {
-    $session_id = _instart_create_session($api);
+    $session_id = _instart_logic_create_session($api);
   }
   return $session_id;
 }
@@ -87,7 +87,7 @@ function _instart_get_session($api) {
  * @return bool
  *    The session id or FALSE.
  */
-function _instart_create_session($api) {
+function _instart_logic_create_session($api) {
   $result = $api->createSession();
   $data = $result->data;
   $id = json_decode($data)->id;
@@ -106,7 +106,7 @@ function _instart_create_session($api) {
  * @return bool
  *    TRUE if it's a match, FALSE otherwise.
  */
-function _instart_customername_match($response, $customername) {
+function _instart_logic_customername_match($response, $customername) {
   if ($response && $response->code == '200') {
     $account = json_decode($response->data);
     return $account->customer_name == $customername;
@@ -130,7 +130,7 @@ function instart_logic_expire_cache($urls, $wildcards, $object_type, $object) {
 
   $api = new Instart($username, $password, $customername);
   try {
-    $session_id = _instart_get_session($api);
+    $session_id = _instart_logic_get_session($api);
   }
   catch (InstartException $e) {
     drupal_set_message($e->getMessage(), 'error');
@@ -143,7 +143,7 @@ function instart_logic_expire_cache($urls, $wildcards, $object_type, $object) {
       $purge_urls = array(
         $full_url => 'EXACT_LITERAL',
       );
-      drupal_set_message ('purging ' . $full_url);
+      drupal_set_message (t('Purging @url', array('@url' => $full_url)));
       try {
         $api->purgeUrls($purge_urls, $session_id);
       } catch (InstartPurgeException $e) {

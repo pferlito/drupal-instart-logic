@@ -40,8 +40,11 @@ class Instart {
    * Construct function for the Instart Logic class.
    *
    * @param string $username
+   *    Instart Logic username
    * @param string $password
+   *    Instart Logic password
    * @param string $customername
+   *    Instart Logic customer name
    */
   public function __construct($username, $password, $customername) {
     $this->username = $username;
@@ -150,7 +153,7 @@ class Instart {
     $headers['Cookie'] = 'authtoken=' . $session_id;
     $result = $this->query($this->purge_url, $json, 'POST', $headers);
     if ($result->code != '201') {
-      throw new InstartPurgeException('Error: Could not purge url ' . $url);
+      throw new InstartPurgeException('Error: Could not purge url');
     }
     else return $result;
   }

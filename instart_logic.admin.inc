@@ -109,12 +109,14 @@ function instart_logic_api_access_validate($form, &$form_state) {
     return;
   }
 
-  if ($username == ''|| $password == '' || $customername == '') return;
+  if ($username == ''|| $password == '' || $customername == '') {
+    return;
+  }
 
   $api = new Instart($username, $password, $customername);
 
   try {
-    $session_id = _instart_create_session($api);
+    $session_id = _instart_logic_create_session($api);
     $account = $api->getAccount($session_id);
   }
   catch (InstartException $e) {
@@ -124,7 +126,7 @@ function instart_logic_api_access_validate($form, &$form_state) {
     return;
   }
 
-  $match = _instart_customername_match($account, $customername);
+  $match = _instart_logic_customername_match($account, $customername);
 
   if (!$match) {
     form_set_error('instart_logic_customername', t('Customer Name does not match the account.'));
@@ -266,11 +268,11 @@ function instart_logic_purge_form_submit($form, &$form_state) {
   $api = new Instart($username, $password, $customername);
   $valid_urls = cache_get('instart_logic_urls_list')->data;
   foreach (array_keys($valid_urls) as $url) {
-    drupal_set_message ('Purging ' . $url);
+    drupal_set_message (t('Purging @url', array('@url' => $url)));
   };
   if (!empty($valid_urls)) {
     try {
-      $session_id = _instart_get_session($api);
+      $session_id = _instart_logic_get_session($api);
       $api->purgeUrls($valid_urls, $session_id);
     }
     catch (InstartException $e) {
