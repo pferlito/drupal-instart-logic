@@ -128,25 +128,26 @@ function instart_logic_expire_cache($urls, $wildcards, $object_type, $object) {
   $external_domain = _instart_logic_get_external_domain();
   $schemes = _instart_logic_get_schemes();
 
-  $api = new Instart($username, $password, $customername);
+  $api = new InstartLogic($username, $password, $customername);
   try {
     $session_id = _instart_logic_get_session($api);
   }
-  catch (InstartException $e) {
+  catch (InstartLogicException $e) {
     drupal_set_message($e->getMessage(), 'error');
     return;
   }
   foreach ($urls as $url) {
     foreach ($schemes as $scheme) {
-      $path = trim(parse_url($url, PHP_URL_PATH),'/');
+      $path = trim(parse_url($url, PHP_URL_PATH), '/');
       $full_url = $scheme . '://' . $external_domain . '/' . $path;
       $purge_urls = array(
         $full_url => 'EXACT_LITERAL',
       );
-      drupal_set_message (t('Purging @url', array('@url' => $full_url)));
+      drupal_set_message(t('Purging @url', array('@url' => $full_url)));
       try {
         $api->purgeUrls($purge_urls, $session_id);
-      } catch (InstartPurgeException $e) {
+      }
+      catch (InstartLogicPurgeException $e) {
         drupal_set_message($e->getMessage(), 'error');
       }
     }

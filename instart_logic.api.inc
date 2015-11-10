@@ -1,50 +1,50 @@
 <?php
 /**
  * @file
- * Contains Instart classes for the Instart Logic service API.
+ * Contains classes for the Instart Logic service API.
  */
 
 /**
  * Exception class for Instart Logic module.
  */
-class InstartException extends Exception {
+class InstartLogicException extends Exception {
 
 }
 
 /**
  * Exception class for session failure.
  */
-class InstartSessionException extends InstartException {
+class InstartLogicSessionException extends InstartLogicException {
 
 }
 
 /**
  * Exception class for account fetch failure.
  */
-class InstartGetAccountException extends InstartException {
+class InstartLogicGetAccountException extends InstartLogicException {
 
 }
 
 /**
  * Exception class for purge failure.
  */
-class InstartPurgeException extends InstartException {
+class InstartLogicPurgeException extends InstartLogicException {
 
 }
 
 /**
  * Instart Logic API for Drupal.
  */
-class Instart {
+class InstartLogic {
   /**
    * Construct function for the Instart Logic class.
    *
    * @param string $username
-   *    Instart Logic username
+   *    Instart Logic username.
    * @param string $password
-   *    Instart Logic password
+   *    Instart Logic password.
    * @param string $customername
-   *    Instart Logic customer name
+   *    Instart Logic customer name.
    */
   public function __construct($username, $password, $customername) {
     $this->username = $username;
@@ -65,7 +65,7 @@ class Instart {
    * @return bool
    *    TRUE if credentials are validated.
    *
-   * @throws InstartSessionException
+   * @throws InstartLogicSessionException
    *    Thrown when session creation fails.
    */
   public function createSession() {
@@ -75,7 +75,7 @@ class Instart {
 
     $result = $this->query($this->auth_url, '', 'POST', $headers);
     if ($result->code != '201') {
-      throw new InstartSessionException('Error: Could not create session.');
+      throw new InstartLogicSessionException('Error: Could not create session.');
     }
     else {
       return $result;
@@ -91,7 +91,7 @@ class Instart {
    * @return array
    *    The server response with account information.
    *
-   * @throws InstartGetAccountException
+   * @throws InstartLogicGetAccountException
    *    Thrown when getting account fails.
    */
   public function getAccount($session_id) {
@@ -100,7 +100,7 @@ class Instart {
     $headers['Content-Type'] = 'application/json';
     $result = $this->query($this->account_url, '', 'GET', $headers);
     if ($result->code != '200') {
-      throw new InstartGetAccountException('Error: Could not validate customer name');
+      throw new InstartLogicGetAccountException('Error: Could not validate customer name');
     }
     else {
       return $result;
@@ -135,7 +135,7 @@ class Instart {
    * @return array
    *    The array representing the response.
    *
-   * @throws InstartPurgeException
+   * @throws InstartLogicPurgeException
    *    Thrown when purging fails.
    */
   public function purgeUrls($urls, $session_id) {
@@ -153,9 +153,11 @@ class Instart {
     $headers['Cookie'] = 'authtoken=' . $session_id;
     $result = $this->query($this->purge_url, $json, 'POST', $headers);
     if ($result->code != '201') {
-      throw new InstartPurgeException('Error: Could not purge url');
+      throw new InstartLogicPurgeException('Error: Could not purge url');
     }
-    else return $result;
+    else {
+      return $result;
+    }
   }
 
   /**

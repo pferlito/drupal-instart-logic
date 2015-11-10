@@ -113,13 +113,13 @@ function instart_logic_api_access_validate($form, &$form_state) {
     return;
   }
 
-  $api = new Instart($username, $password, $customername);
+  $api = new InstartLogic($username, $password, $customername);
 
   try {
     $session_id = _instart_logic_create_session($api);
     $account = $api->getAccount($session_id);
   }
-  catch (InstartException $e) {
+  catch (InstartLogicException $e) {
     drupal_set_message($e->getMessage(), 'error');
     form_set_error('credentials', t('Invalid credentials.
     Please contact Instart Logic.'));
@@ -265,17 +265,17 @@ function instart_logic_purge_form_submit($form, &$form_state) {
   $username = variable_get('instart_logic_username', '');
   $password = variable_get('instart_logic_password', '');
   $customername = variable_get('instart_logic_customername', '');
-  $api = new Instart($username, $password, $customername);
+  $api = new InstartLogic($username, $password, $customername);
   $valid_urls = cache_get('instart_logic_urls_list')->data;
   foreach (array_keys($valid_urls) as $url) {
-    drupal_set_message (t('Purging @url', array('@url' => $url)));
+    drupal_set_message(t('Purging @url', array('@url' => $url)));
   };
   if (!empty($valid_urls)) {
     try {
       $session_id = _instart_logic_get_session($api);
       $api->purgeUrls($valid_urls, $session_id);
     }
-    catch (InstartException $e) {
+    catch (InstartLogicException $e) {
       drupal_set_message($e->getMessage(), 'error');
       return;
     }
